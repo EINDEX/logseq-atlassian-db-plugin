@@ -85,7 +85,8 @@ function parseConfluenceUrl(url: URL, originalUrl: string): AtlassianLink | null
 
   const pathMatch = url.pathname.match(/\/wiki\/spaces\/[^/]+\/pages\/(\d+)(?:$|\/|[?#])/i)
   if (pathMatch) {
-    return confluenceLink(url, originalUrl, pathMatch[1])
+    const spaceKey = decodeURIComponent(url.pathname.match(/\/wiki\/spaces\/([^/]+)\/pages\//i)?.[1] ?? '')
+    return confluenceLink(url, originalUrl, pathMatch[1], spaceKey || undefined)
   }
 
   return null
@@ -100,11 +101,12 @@ function jiraLink(url: URL, originalUrl: string, issueKey: string): AtlassianLin
   }
 }
 
-function confluenceLink(url: URL, originalUrl: string, pageId: string): AtlassianLink {
+function confluenceLink(url: URL, originalUrl: string, pageId: string, spaceKey?: string): AtlassianLink {
   return {
     kind: 'confluence',
     originalUrl,
     siteOrigin: url.origin,
     pageId,
+    spaceKey,
   }
 }

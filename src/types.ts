@@ -4,8 +4,26 @@ export type AtlassianSettings = {
   siteUrl: string
   email: string
   apiToken: string
+  sitesConfig: string
   autoRewrite: boolean
   requestTimeout: number
+}
+
+export type AtlassianSiteConfig = {
+  id?: string
+  siteUrl: string
+  email: string
+  apiToken: string
+  enabled?: boolean
+}
+
+export type AtlassianSiteProfile = {
+  id: string
+  siteUrl: string
+  siteOrigin: string
+  email: string
+  apiToken: string
+  enabled: boolean
 }
 
 export type JiraLink = {
@@ -20,6 +38,7 @@ export type ConfluenceLink = {
   originalUrl: string
   siteOrigin: string
   pageId: string
+  spaceKey?: string
 }
 
 export type AtlassianLink = JiraLink | ConfluenceLink
@@ -31,6 +50,9 @@ export type AtlassianMetadata = {
   status: string
   key?: string
   pageId?: string
+  spaceId?: string
+  spaceKey?: string
+  spaceName?: string
 }
 
 export type LinkResolution = {

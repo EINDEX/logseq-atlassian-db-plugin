@@ -1,4 +1,7 @@
 import type { AtlassianLink, AtlassianMetadata, AtlassianSettings } from './types'
+import { normalizeSiteOrigin, resolveSiteProfile } from './site-profiles'
+
+export { normalizeSiteOrigin } from './site-profiles'
 
 type JiraIssueResponse = {
   key?: string
@@ -16,6 +19,15 @@ type ConfluencePageResponse = {
   id?: string
   title?: string
   status?: string
+  spaceId?: string
+  message?: string
+  errorMessages?: string[]
+}
+
+type ConfluenceSpaceResponse = {
+  id?: string
+  key?: string
+  name?: string
   message?: string
   errorMessages?: string[]
 }
@@ -34,16 +46,28 @@ export async function fetchAtlassianMetadata(
   settings: AtlassianSettings,
   requestJson: RequestJson,
 ): Promise<AtlassianMetadata> {
-  assertSettings(settings)
-  assertConfiguredSiteMatchesLink(settings, link)
-
-  if (link.kind === 'jira') {
-    const url = `${link.siteOrigin}/rest/api/3/issue/${encodeURIComponent(link.issueKey)}?fields=summary,status`
-    return mapJiraIssue(link, (await requestJson(url, settings)) as JiraIssueResponse)
+  const profile = resolveSiteProfile(link, settings)
+  const requestSettings = {
+    ...settings,
+    siteUrl: profile.siteUrl,
+    email: profile.email,
+    apiToken: profile.apiToken,
   }
 
-  const url = `${link.siteOrigin}/wiki/api/v2/pages/${encodeURIComponent(link.pageId)}`
-  return mapConfluencePage(link, (await requestJson(url, settings)) as ConfluencePageResponse)
+  assertConfiguredSiteMatchesLink(requestSettings, link)
+
+  if (link.kind === 'jira') {
+    const url = `${link.siteOrigin}/rest/api/3/issue/${encodeURIComponent(link.issueKey)}?fields=summary`
+    return mapJiraIssue(link, (await requestJson(url, requestSettings)) as JiraIssueResponse)
+  }
+
+  const pageUrl = `${link.siteOrigin}/wiki/api/v2/pages/${encodeURIComponent(link.pageId)}`
+  const page = (await requestJson(pageUrl, requestSettings)) as ConfluencePageResponse
+  const space = page.spaceId
+    ? (await requestJson(`${link.siteOrigin}/wiki/api/v2/spaces/${encodeURIComponent(page.spaceId)}`, requestSettings) as ConfluenceSpaceResponse)
+    : undefined
+
+  return mapConfluencePage(link, page, space)
 }
 
 export function mapJiraIssue(link: Extract<AtlassianLink, { kind: 'jira' }>, response: JiraIssueResponse): AtlassianMetadata {
@@ -68,9 +92,12 @@ export function mapJiraIssue(link: Extract<AtlassianLink, { kind: 'jira' }>, res
 export function mapConfluencePage(
   link: Extract<AtlassianLink, { kind: 'confluence' }>,
   response: ConfluencePageResponse,
+  space?: ConfluenceSpaceResponse,
 ): AtlassianMetadata {
   const remoteError = extractAtlassianError(response)
   if (remoteError) throw new AtlassianFetchError(remoteError)
+  const spaceError = space ? extractAtlassianError(space) : null
+  if (spaceError) throw new AtlassianFetchError(spaceError)
 
   if (!response.title) {
     throw new AtlassianFetchError(`Confluence page ${link.pageId} did not include a title`)
@@ -82,6 +109,9 @@ export function mapConfluencePage(
     pageId: response.id ?? link.pageId,
     title: response.title,
     status: response.status ?? '',
+    spaceId: response.spaceId,
+    spaceKey: space?.key ?? link.spaceKey,
+    spaceName: space?.name,
   }
 }
 
@@ -105,31 +135,6 @@ export async function logseqRequestJson<T>(url: string, settings: AtlassianSetti
   return response as T
 }
 
-export function normalizeSiteOrigin(siteUrl: string): string | null {
-  const trimmed = siteUrl.trim()
-  if (!trimmed) return null
-  const withProtocol = /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
-
-  try {
-    const url = new URL(withProtocol)
-    return url.origin
-  } catch {
-    return null
-  }
-}
-
-function assertSettings(settings: AtlassianSettings): void {
-  const missing = [
-    settings.siteUrl.trim() ? null : 'site URL',
-    settings.email.trim() ? null : 'email',
-    settings.apiToken.trim() ? null : 'API token',
-  ].filter(Boolean)
-
-  if (missing.length > 0) {
-    throw new AtlassianFetchError(`Configure Atlassian ${missing.join(', ')} in plugin settings`)
-  }
-}
-
 function assertConfiguredSiteMatchesLink(settings: AtlassianSettings, link: AtlassianLink): void {
   const siteOrigin = normalizeSiteOrigin(settings.siteUrl)
   if (!siteOrigin) throw new AtlassianFetchError('Configured Atlassian site URL is invalid')
@@ -138,7 +143,7 @@ function assertConfiguredSiteMatchesLink(settings: AtlassianSettings, link: Atla
   }
 }
 
-function extractAtlassianError(response: JiraIssueResponse | ConfluencePageResponse): string | null {
+function extractAtlassianError(response: JiraIssueResponse | ConfluencePageResponse | ConfluenceSpaceResponse): string | null {
   if (Array.isArray(response.errorMessages) && response.errorMessages.length > 0) {
     return response.errorMessages.join('; ')
   }
@@ -147,7 +152,7 @@ function extractAtlassianError(response: JiraIssueResponse | ConfluencePageRespo
     return Object.values(response.errors).join('; ')
   }
 
-  if ('message' in response && response.message && !response.title) {
+  if ('message' in response && response.message && !('title' in response && response.title) && !('name' in response && response.name)) {
     return response.message
   }
 

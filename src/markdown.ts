@@ -1,4 +1,5 @@
 import { parseAtlassianUrl, stripWrappingPunctuation } from './parser'
+import { AtlassianSiteConfigError } from './site-profiles'
 import type { AtlassianLink, AtlassianMetadata, LinkResolution } from './types'
 
 export type RewriteResult = {
@@ -8,6 +9,9 @@ export type RewriteResult = {
 }
 
 type Resolver = (link: AtlassianLink) => Promise<AtlassianMetadata>
+type ResolvedLink = LinkResolution & {
+  preserveOriginal?: boolean
+}
 
 const MARKDOWN_LINK_RE = /\[([^\]\n]*(?:\\\][^\]\n]*)*)\]\((https?:\/\/[^)\s]+)\)/gi
 const RAW_URL_RE = /https?:\/\/[^\s<>\]]+/gi
@@ -33,7 +37,15 @@ export async function rewriteAtlassianLinks(
     } else {
       const resolution = await resolveLink(link, resolve)
       resolutions.push(resolution)
-      segments.push(resolution.metadata ? toMarkdownLink(resolution.metadata, url) : fullMatch)
+      segments.push(
+        resolution.preserveOriginal
+          ? fullMatch
+          : resolution.metadata
+          ? toMarkdownLink(resolution.metadata, url)
+          : isUrlLabel(match[1], url)
+            ? toMarkdownLinkWithLabel(fallbackLabel(link), url)
+            : fullMatch,
+      )
     }
 
     cursor = index + fullMatch.length
@@ -55,7 +67,9 @@ export function metadataToLabel(metadata: AtlassianMetadata): string {
     return `${key}: ${metadata.title || key}`
   }
 
-  return metadata.title || `Confluence page ${metadata.pageId ?? ''}`.trim()
+  const title = metadata.title || `Confluence page ${metadata.pageId ?? ''}`.trim()
+  const space = metadata.spaceName || metadata.spaceKey
+  return space ? `${space}: ${title}` : title
 }
 
 async function rewriteRawUrls(
@@ -80,7 +94,13 @@ async function rewriteRawUrls(
     } else {
       const resolution = await resolveLink(link, resolve)
       resolutions.push(resolution)
-      segments.push(resolution.metadata ? toMarkdownLink(resolution.metadata, trimmedUrl) : trimmedUrl)
+      segments.push(
+        resolution.preserveOriginal
+          ? rawMatch
+          : resolution.metadata
+          ? toMarkdownLink(resolution.metadata, trimmedUrl)
+          : toMarkdownLinkWithLabel(fallbackLabel(link), trimmedUrl),
+      )
       segments.push(trailing)
     }
 
@@ -91,16 +111,33 @@ async function rewriteRawUrls(
   return segments.join('')
 }
 
-async function resolveLink(link: AtlassianLink, resolve: Resolver): Promise<LinkResolution> {
+async function resolveLink(link: AtlassianLink, resolve: Resolver): Promise<ResolvedLink> {
   try {
     return { link, metadata: await resolve(link) }
   } catch (error) {
-    return { link, error: errorToMessage(error) }
+    return {
+      link,
+      error: errorToMessage(error),
+      preserveOriginal: error instanceof AtlassianSiteConfigError,
+    }
   }
 }
 
 function toMarkdownLink(metadata: AtlassianMetadata, url: string): string {
-  return `[${escapeMarkdownLabel(metadataToLabel(metadata))}](${escapeMarkdownUrl(url)})`
+  return toMarkdownLinkWithLabel(metadataToLabel(metadata), url)
+}
+
+function toMarkdownLinkWithLabel(label: string, url: string): string {
+  return `[${escapeMarkdownLabel(label)}](${escapeMarkdownUrl(url)})`
+}
+
+function fallbackLabel(link: AtlassianLink): string {
+  if (link.kind === 'jira') return link.issueKey
+  return `Confluence page ${link.pageId}`
+}
+
+function isUrlLabel(label: string, url: string): boolean {
+  return label.trim() === url
 }
 
 function escapeMarkdownLabel(label: string): string {

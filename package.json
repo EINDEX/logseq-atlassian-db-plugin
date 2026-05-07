@@ -1,16 +1,44 @@
 {
   "name": "logseq-atlassian-linker",
   "version": "0.1.0",
-  "description": "Logseq DB graph plugin that rewrites Atlassian URLs to Markdown links and stores Jira/Confluence metadata as DB properties.",
+  "description": "Logseq DB graph plugin that rewrites Atlassian URLs to Markdown links with Jira or Confluence titles.",
+  "author": "EINDEX",
   "license": "MIT",
   "type": "module",
   "main": "dist/index.html",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EINDEX/logseq-atlassian-db-plugin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/EINDEX/logseq-atlassian-db-plugin/issues"
+  },
+  "homepage": "https://github.com/EINDEX/logseq-atlassian-db-plugin#readme",
+  "files": [
+    "CHANGELOG.md",
+    "dist",
+    "icon.png",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
+    "check": "npm test && npm run typecheck && npm run build",
     "dev": "vite build --watch",
     "build": "vite build",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "release:patch": "npm version patch -m \"release: v%s\"",
+    "release:minor": "npm version minor -m \"release: v%s\"",
+    "release:major": "npm version major -m \"release: v%s\""
   },
+  "keywords": [
+    "logseq",
+    "logseq-plugin",
+    "db-graph",
+    "atlassian",
+    "jira",
+    "confluence"
+  ],
   "dependencies": {
     "@logseq/libs": "^0.3.3"
   },
@@ -27,8 +55,14 @@
   "logseq": {
     "id": "logseq-atlassian-linker",
     "title": "Atlassian Linker",
+    "icon": "./icon.png",
     "main": "dist/index.html",
     "effect": true,
+    "repo": "EINDEX/logseq-atlassian-db-plugin",
+    "sponsors": [
+      "https://github.com/sponsors/EINDEX"
+    ],
+    "web": true,
     "supportsDB": true,
     "supportsDBOnly": true
   }

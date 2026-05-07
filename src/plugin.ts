@@ -1,8 +1,9 @@
 import type { BlockEntity } from '@logseq/libs/dist/LSPlugin'
 import { fetchAtlassianMetadata, logseqRequestJson } from './atlassian'
 import { rewriteAtlassianLinks } from './markdown'
-import { ensureAtlassianProperties, writeAtlassianProperties } from './properties'
+import { clearAtlassianProperties, PROPERTY_KEYS } from './properties'
 import { readSettings, registerSettingsSchema } from './settings'
+import { registerSiteManager } from './site-manager'
 import type { AtlassianLink, AtlassianMetadata } from './types'
 
 const DEBOUNCE_MS = 600
@@ -27,14 +28,13 @@ let lastWarningAt = 0
 
 export async function startPlugin(): Promise<void> {
   registerSettingsSchema()
+  registerSiteManager()
 
   const isDbGraph = await (globalThis as any).logseq.App.checkCurrentIsDbGraph()
   if (!isDbGraph) {
     await showWarning('Atlassian Linker requires a Logseq DB graph.')
     return
   }
-
-  await ensureAtlassianProperties()
 
   offHooks.push(
     (globalThis as any).logseq.DB.onChanged(({ blocks }: { blocks: BlockEntity[] }) => {
@@ -70,6 +70,10 @@ async function processBlock(block: BlockEntity): Promise<void> {
   processingBlocks.add(block.uuid)
 
   try {
+    if (hasAtlassianProperties(block)) {
+      await clearAtlassianProperties(block.uuid)
+    }
+
     const settings = readSettings()
     const result = await rewriteAtlassianLinks(title, (link) => resolveMetadata(link, settings))
     const primaryResolution = result.resolutions[0]
@@ -82,8 +86,6 @@ async function processBlock(block: BlockEntity): Promise<void> {
     if (result.changed) {
       await (globalThis as any).logseq.Editor.updateBlock(block.uuid, result.content)
     }
-
-    await writeAtlassianProperties(block.uuid, primaryResolution)
 
     if (primaryResolution.error) {
       await showWarning(primaryResolution.error)
@@ -136,6 +138,11 @@ function resolveMetadata(link: AtlassianLink, settings: ReturnType<typeof readSe
 
 function getBlockTitle(block: BlockEntity): string {
   return typeof block.title === 'string' ? block.title : (block.content ?? '')
+}
+
+function hasAtlassianProperties(block: BlockEntity): boolean {
+  const properties = block.properties
+  return Boolean(properties && Object.values(PROPERTY_KEYS).some((key) => key in properties))
 }
 
 async function showWarning(message: string): Promise<void> {
