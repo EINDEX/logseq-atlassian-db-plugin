@@ -6,6 +6,7 @@
   "icon": "./icon.png",
   "sponsors": ["https://github.com/sponsors/EINDEX"],
   "web": true,
+  "effect": true,
   "supportsDB": true,
   "supportsDBOnly": true
 }
