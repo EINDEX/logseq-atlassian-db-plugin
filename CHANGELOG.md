@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 - 2026-05-07
+
+- Add a marketplace demo image.
+- Include README assets in release packages.
+
 ## 0.1.0 - 2026-05-07
 
 - Rewrite Atlassian Cloud links in Logseq DB graphs to Markdown links.

@@ -2,6 +2,8 @@
 
 Logseq DB graph plugin that watches edited blocks for Atlassian Cloud links and rewrites them to standard Markdown links with Jira or Confluence titles.
 
+![Atlassian Linker demo](assets/demo.svg)
+
 ## Development
 
 This environment has conflicting Node CA settings. Use:

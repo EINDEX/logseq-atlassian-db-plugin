@@ -15,6 +15,7 @@
   },
   "homepage": "https://github.com/EINDEX/logseq-atlassian-db-plugin#readme",
   "files": [
+    "assets",
     "CHANGELOG.md",
     "dist",
     "icon.png",

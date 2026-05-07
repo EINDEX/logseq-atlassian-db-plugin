@@ -38,7 +38,7 @@ jobs:
       - name: Build release zip
         run: |
           mkdir -p "release/${PLUGIN_NAME}"
-          cp -R README.md CHANGELOG.md LICENSE package.json icon.png dist "release/${PLUGIN_NAME}/"
+          cp -R README.md CHANGELOG.md LICENSE package.json icon.png assets dist "release/${PLUGIN_NAME}/"
           cd release
           zip -r "${PLUGIN_NAME}.zip" "${PLUGIN_NAME}"
 

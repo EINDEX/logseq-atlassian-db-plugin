@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Atlassian Linker demo</title>
+  <desc id="desc">A Logseq DB graph block showing raw Atlassian links rewritten to Jira and Confluence titles.</desc>
+  <defs>
+    <linearGradient id="panel" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#202321"/>
+      <stop offset="1" stop-color="#151716"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#000" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="720" fill="#101211"/>
+  <rect x="72" y="66" width="1136" height="588" rx="18" fill="url(#panel)" filter="url(#shadow)"/>
+  <rect x="72" y="66" width="1136" height="58" rx="18" fill="#1a1d1b"/>
+  <circle cx="112" cy="96" r="8" fill="#ff8544"/>
+  <circle cx="142" cy="96" r="8" fill="#f2c14e"/>
+  <circle cx="172" cy="96" r="8" fill="#54c77b"/>
+  <text x="210" y="106" fill="#f4f1eb" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">Logseq Atlassian Linker</text>
+  <text x="100" y="174" fill="#9a9f9a" font-family="Inter, Arial, sans-serif" font-size="20">Before</text>
+  <rect x="100" y="196" width="1080" height="122" rx="12" fill="#111412" stroke="#2c302d"/>
+  <circle cx="133" cy="236" r="5" fill="#737872"/>
+  <text x="158" y="244" fill="#d8d5cf" font-family="Inter, Arial, sans-serif" font-size="24">https://team.atlassian.net/browse/PBTE-150</text>
+  <circle cx="133" cy="282" r="5" fill="#737872"/>
+  <text x="158" y="290" fill="#d8d5cf" font-family="Inter, Arial, sans-serif" font-size="24">https://team.atlassian.net/wiki/spaces/SEC/pages/2481/Working+Visa</text>
+  <text x="100" y="380" fill="#9a9f9a" font-family="Inter, Arial, sans-serif" font-size="20">After</text>
+  <rect x="100" y="402" width="1080" height="170" rx="12" fill="#111412" stroke="#343a35"/>
+  <circle cx="133" cy="444" r="5" fill="#737872"/>
+  <text x="158" y="452" fill="#ff8a3d" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">PBTE-150: Discover options for authenticating GitHub Actions</text>
+  <line x1="158" y1="462" x2="908" y2="462" stroke="#ff8a3d" stroke-width="2"/>
+  <circle cx="133" cy="508" r="5" fill="#737872"/>
+  <text x="158" y="516" fill="#ff8a3d" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">Security: Working Visa</text>
+  <line x1="158" y1="526" x2="448" y2="526" stroke="#ff8a3d" stroke-width="2"/>
+  <rect x="100" y="608" width="310" height="32" rx="16" fill="#21382c"/>
+  <text x="122" y="631" fill="#8ee6ad" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">multi-site credentials matched by origin</text>
+</svg>
