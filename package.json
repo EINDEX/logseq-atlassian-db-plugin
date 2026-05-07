@@ -1,6 +1,6 @@
 {
   "name": "logseq-atlassian-linker",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Logseq DB graph plugin that rewrites Atlassian URLs to Markdown links with Jira or Confluence titles.",
   "author": "EINDEX",
   "license": "MIT",
